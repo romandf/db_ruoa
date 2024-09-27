@@ -38,7 +38,7 @@ class DataBase:
         return fun_interna
     
     #Decorador para el cierre del cursor y la base de datos
-    def conexion(funcion_parametro):
+    def close_connect(funcion_parametro):
         def interno(self, *args, **kwargs):
             try:
                 if self.conexion_cerrada:
@@ -65,8 +65,23 @@ class DataBase:
                     print("Se cerro la conexion en el servidor..")
                     self.conexion_cerrada = True
         return interno
+    
     #metodo para cualesquiera consultas desde la base de datos
-    @conexion
+    def check_db(funcion_parametro):
+        def interno(self, name_db,*args):
+        #Primero se verifica si la base de datos existe
+            sql = f"SHOW DATABASES LIKE '{name_db}'"
+            self.cursor.execute(sql)
+            result = self.cursor.fetchone()
+            #Si la base de datos no existe, muestra un mensaje de error y termina la funcion
+            if not result:
+                print(f"La base de datso {name_db} no existe.")
+                return
+            return funcion_parametro(self, name_db, *args)
+        return interno
+    
+    #hace cualquier tipo de consult sql
+    @close_connect
     def consult(self, sql):
         try:
             self.cursor.execute(sql)
@@ -74,8 +89,9 @@ class DataBase:
             print(self.cursor.fetchall())
         except:
             print("Ocurrio un error. revisa la instruccion SQL.")
+
     #metodo para mostrar las bases de datos
-    @conexion
+    @close_connect
     def show_db(self):
         try:
             #Se informa de que se estan obteniendo las bases de datos
@@ -89,17 +105,18 @@ class DataBase:
             #Si ocurre una excepcion, se avisa en la consola
             print("No se pudieron obtener las bases de datos. COmprueba la conexion con el servidor..")
     #metodo para borrar las bases de datos
-    @conexion #Cuando se usan varios decoradores el primero que se llama es el ultimo en ejecutarse
+    @close_connect #Cuando se usan varios decoradores el primero que se llama es el ultimo en ejecutarse
     @reporte_db #uso de la funcion decoradora
+    @check_db # ultimo en entrar primero en ejecutar..
     def drop_db(self, name_db):
-        try:
+            #realiza la consulta para eliminar la base de datos
             self.cursor.execute(f"DROP DATABASE {name_db}")
             print(f'La base de datos "{name_db}" se elimino correctamente..')
-        except:
-            print(f'No existe la base de datos.. "{name_db}"')
-    @conexion
-    @reporte_db
+
     #metodo para crear bases de datos
+    @close_connect
+    @reporte_db
+    #@check_db
     def create_db(self, name_db):
         try:
             self.cursor.execute(f"CREATE DATABASE IF NOT EXISTS {name_db}")
@@ -108,27 +125,19 @@ class DataBase:
             print(f'Ocurrio un error al intentar crear la base de datos "{name_db}"')
 
     #Crear Backups de bases de datos
-    @conexion
+    @close_connect
+    @check_db
     def copia_db(self, name_db):
-        #Verifica si la base de datos existe en el servidor
-        sql = f"SHOW DATABASES LIKE '{name_db}'"
-        self.cursor.execute(sql)
-        result = self.cursor.fetchone()
-
-        #Si la base de datos no existe, muestra un mensaje de error y termina el metodo
-        if not result:
-            print(f"La base de datos {name_db} no existe.")
-            return #aparte de regresar valores. termina las funciones
         #obtiene la hora y la fecha actuales
         self.fecha_hora = datetime.now().strftime("%Y-%m-%d %H-%M")
-
         #Se crea la copia de seguridad
         with open(f"{carpeta_respaldo}/{name_db}_{self.fecha_hora}.sql","w") as out:
             subprocess.Popen(f'mysqldump --user=root --password={self.password} --databases {name_db}', shell=True, stdout=out)
         print("La copia se creo correctamente..")
     
     #Crear Tablas
-    @conexion
+    @close_connect
+    @check_db
     def create_table(self, name_db, name_table, columns):
         try:
             columns_string =""
@@ -160,62 +169,93 @@ class DataBase:
             print(f"ocurrio un error al crear la tabla {name_table}")
     
     #Borrar tablas desde la base de datos
-    @conexion
+    @close_connect
+    @check_db
     def drop_table(self, name_db,name_table):
-        #selecccionamos la base de datos
-        self.cursor.execute(f" USE {name_db}")
-        #Instruccion sql para  eliminar la tabla si es que existe
-        sql = f"DROP TABLE IF EXISTS {name_table}"
-        self.cursor.execute(sql)
-        #hace efectiva
-        self.conector.commit()
-        self.conector.close()
-
-    @conexion
-    def show_tables(self, name_db):
         try:
-            #Primero se verifica si la base de datos existe
-            sql = f"SHOW DATABASES LIKE '{name_db}'"
-            self.cursor.execute(sql)
-            result = self.cursor.fetchone()
-            #Si la base de datos no existe, muestra un mensaje de error y termina la funcion
-            if not result:
-                print(f"La base de datso {name_db} no existe.")
-                return
+            #selecccionamos la base de datos
+            self.cursor.execute(f" USE {name_db}")
+            self.cursor.execute(f"DROP TABLE {name_table}")
+            #Instruccion sql para  eliminar la tabla si es que existe
+            print(f"Table '{name_table}' se elimino correctamente de la base de datos {name_db}")
+            #hace efectiva
+        except:
+            print(f"No se pudo eliminar la tabla '{name_table}' de la base de datos. '{name_db}'")
+
+    #metodo para mostrar las tablas contenidas en la base de datos
+    @close_connect
+    @check_db
+    def show_tables(self, name_db):
             #selecciona la base de datos 
             self.cursor.execute(f"USE {name_db};")
             #Se informa de que se estan obteniendo las tablas
-            print(f"Listado de las tablas existentes en la base de datos {name_db}")
+            #print(f"Listado de las tablas existentes en la base de datos {name_db}")
             #Realiza la consulta para mostrar las tablas de la base de datos actual
             self.cursor.execute("SHOW TABLES")
             result = self.cursor.fetchall()
+            #Evalua si no existen tablas en la base de datos
+            if not result:
+                print(f"No existen tablas en la base de datos {name_db}")
+                return
             #recorre los resultados y los muestra por pantalla
+            print(f"Listado de las tablas existentes en la base de datos {name_db}")
             for tabla in result:
                 print(f"--{tabla[0]} ")
-        except:
-            print("Ocurrio un error. No existe la tabla en la base de datos")
-    @conexion
+
+
+    @close_connect
+    @check_db
     def show_columns(self, name_db, name_table):
-        #Primero se verifica si la base de datos existe
-        sql = f"SHOW DATABASES LIKE '{name_db}'"
-        self.cursor.execute(sql)
-        result = self.cursor.fetchone()
-        #Si la base de datos no existe, muestra un mensaje de error y termina la funcion
-        if not result:
-            print(f"La base de datso {name_db} no existe.")
-            return
-        
         #Establece la base de datos actual
         self.cursor.execute(f"USE {name_db}")
         try:
             #Realiza la consulta para mostrar las columnas de la tabla
             self.cursor.execute(f"SHOW COLUMNS FROM {name_table}")
             result = self.cursor.fetchall()
-
             #Se informa de que se estan obteniendo las columnas
             print(f"Listado de las columnas de la tabla {name_table}")
             #Recorre el resultado y lo muestra en pantalla
-            for columna in result:
-                print(f"--{columna[0]}")
+            for column in result:
+                #usando expresiones ternarias: variable = expresion_verdadera if expresion_condicional else espresion_falsa
+                not_null = "No adminte valores nulos" if column[2]=="NO" else "Adminte valores nulos."
+                primary_key = "Es clave primaria" if column[3]=="PRI" else ""
+                foreing_key = "Es clave foranea" if column[3] =="MUL" else ""
+                auto_increment = "Es autoincrementable" if column[5] =="auto_increment" else ""
+                print(f"--{column[0]} ({column[1]}) {not_null} {primary_key} {foreing_key} {auto_increment}")
+                
         except:
             print("Ocurrio un error. Compruebe el nombre de la tabla.")
+    @close_connect
+    @check_db
+    def insert_record(self, name_db, name_table, record):
+        self.cursor.execute(f"USE {name_db}")
+
+        if not record:
+            print("la lista de registro esta vacia.")
+            return
+        
+        #Obtener las columnas y valores del diccionario
+        columnas = []
+        valores = []
+        for registro in record:
+            columnas.extend(registro.keys())
+            valores.extend(registro.values())
+        
+        #Convertir las columnas y los valores a strings
+        columnas_string = ""
+        for columna in columnas:
+            columnas_string += f"{columna}, "
+        columnas_string = columnas_string[:-2] #Quitar la ultima comma
+
+        valores_string = ""
+        for valor in valores:
+            valores_string += f"'{valor}', "
+        valores_string = valores_string[:-2] #Quitar la ultima coma y el espacio
+
+        #Crear la instruccion de insercion
+        sql = f"INSERT INTO {name_table}
+        ({columnas_string}) VALUES ({valores_string})"
+
+        self.cursor.execute(sql)
+        self.conector.commit()
+        print("Registro agregado a la tabla")
