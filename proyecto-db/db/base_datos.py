@@ -253,8 +253,7 @@ class DataBase:
         valores_string = valores_string[:-2] #Quitar la ultima coma y el espacio
 
         #Crear la instruccion de insercion
-        sql = f"INSERT INTO {name_table}
-        ({columnas_string}) VALUES ({valores_string})"
+        sql = f"INSERT INTO {name_table} ({columnas_string}) VALUES ({valores_string})"
 
         self.cursor.execute(sql)
         self.conector.commit()
