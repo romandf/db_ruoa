@@ -227,17 +227,17 @@ class DataBase:
             print("Ocurrio un error. Compruebe el nombre de la tabla.")
     @close_connect
     @check_db
-    def insert_record(self, name_db, name_table, record):
+    def insert_record(self, name_db, name_table, records):
         self.cursor.execute(f"USE {name_db}")
 
-        if not record:
+        if not records:
             print("la lista de registro esta vacia.")
             return
         
         #Obtener las columnas y valores del diccionario
         columnas = []
         valores = []
-        for registro in record:
+        for registro in records:
             columnas.extend(registro.keys())
             valores.extend(registro.values())
         
@@ -252,9 +252,52 @@ class DataBase:
             valores_string += f"'{valor}', "
         valores_string = valores_string[:-2] #Quitar la ultima coma y el espacio
 
+        
         #Crear la instruccion de insercion
         sql = f"INSERT INTO {name_table} ({columnas_string}) VALUES ({valores_string})"
-
+        
         self.cursor.execute(sql)
         self.conector.commit()
         print("Registro agregado a la tabla")
+    @close_connect
+    @check_db
+    def delete_record(self, name_db, name_table,conditions):
+        try:
+            #Se  selecciona la base de datos
+            self.cursor.execute(f"USE {name_db}")
+            #se crea la instruccion de eliminacion
+            sql = f"DELETE FROM {name_table} WHERE {conditions}"
+            #Se ejecuta y se confirma
+            self.cursor.execute(sql)
+            self.conector.commit()
+            print("Registros eliminados.")
+        except:
+            print(f"Error al intentar borrar los registros de la tabla {name_table}")
+
+    #Elimina todo el contenido de la tabla
+    def delete_all_record(self, name_db, name_table):
+        try:
+            #Se  selecciona la base de datos
+            self.cursor.execute(f"USE {name_db}")
+            #se crea la instruccion de eliminacion
+            sql = f"TRUNCATE TABLE {name_table}"
+            #Se ejecuta y se confirma
+            self.cursor.execute(sql)
+            self.conector.commit()
+            print("Eliminados todos los registros")
+        except:
+            print(f"Error al intentar borrar los registros de la tabla {name_table}")
+
+    #Actualiza los datos de la tabla
+    def update_data(self, name_db, name_table, columns, conditions):
+        try:
+            #Se selecciona la base de datos
+            self.cursor.execute(f"USE {name_db}")
+            #Se crea la instruccion de actualizacion
+            sql = f"UPDATE {name_table} SET {columns} WHERE {conditions}"
+            #Se ejecuta la instruccion de actualizacion y se hace efectiva
+            self.cursor.execute(sql)
+            self.conector.commit()
+            print("Se Actualizo el registro correctamente")
+        except:
+            print("Ocurrio un error al intentar actualizar el registro.")

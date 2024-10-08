@@ -29,21 +29,11 @@ columnas = [
         {
                 'name': 'direccion',
                 'type': 'VARCHAR',
-                'length': 128,
+                'length': 254,
                 'primary_key': False,
                 'auto_increment': False,
                 'not_null': True
         },
-
-        {
-                'name':'telefono',
-                'type':'VARCHAR',
-                'length': 12,
-                'primary_key': False,
-                'auto_increment': False,
-                'not_null': True
-        },
-
         {
                 'name': 'responsable',
                 'type': 'VARCHAR',
@@ -56,7 +46,7 @@ columnas = [
         {
                 'name':'latitud',
                 'type':'VARCHAR',
-                'length': 10,
+                'length': 32,
                 'primary_key': False,
                 'auto_increment': False,
                 'not_null': True
@@ -65,7 +55,7 @@ columnas = [
         {
                 'name':'longitud',
                 'type':'VARCHAR',
-                'length': 10,
+                'length': 32,
                 'primary_key': False,
                 'auto_increment': False,
                 'not_null': True
@@ -74,7 +64,7 @@ columnas = [
         {
                 'name':'altitud',
                 'type':'VARCHAR',
-                'length': 10,
+                'length': 32,
                 'primary_key': False,
                 'auto_increment': False,
                 'not_null': True

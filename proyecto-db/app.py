@@ -1,16 +1,11 @@
 import db.base_datos as sqldb
 import db.tablas as tbl
+from db.Data.estaciones import records 
+import interfaz.interfaz_grafica as gui
 
 data_base = sqldb.DataBase(**sqldb.db_access)
-record = [{
-    "name" : "UNAM",
-    "sitio" : "Universidad Nacional Autonoma de Mexico",
-    "direccion" : "Ciudad Universitaria s/n, Coyoacan CDMX",
-    "telefono" : "555555555",
-    "responsable" : "personal RUOA",
-    "latitud" : "19.000 N",
-    "longitud" : "180.000 W",
-    "altitud" : "2400 msnm"}]
+
+ventana_login =gui.Login()
 
 #createdb = data_base.create_db("CREATE DATABASE ruoa_stations;")
 #data_base.consult("SHOW DATABASESSWDD;")
@@ -23,4 +18,8 @@ record = [{
 #data_base.show_tables("pruebas2")
 #data_base.show_tables("ruoa")
 #data_base.show_columns("ruoa", "stations")
-data_base.insert_record("ruoa","stations",record)
+#for record in records:
+#	data_base.insert_record("ruoa","stations",record)
+#data_base.delete_record("ruoa","stations","name = 'sine'")
+#data_base.delete_all_record("ruoa","stations")
+#data_base.update_data("ruoa","stations","responsable = 'Delibes Flores'", "name = 'UNAM'")
