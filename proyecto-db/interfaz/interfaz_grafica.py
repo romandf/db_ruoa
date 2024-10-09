@@ -1,6 +1,6 @@
 from os import path
 import customtkinter as ctk
-from PIL import ImageTk, Image
+from PIL import Image
 from db.base_datos import db_access
 
 ctk.set_appearance_mode("dark") #Modes: system (default), light, dark
@@ -57,7 +57,9 @@ class Login:
     def validar(self):
         obtener_usuario = self.usuario.get()
         obtener_password = self.password.get()
+        ##Una vez terminado el programa cambiar la validacion de obtener usuario == por !=
         if obtener_usuario != db_access["user"] or obtener_password != db_access["password"]:
+        #if obtener_usuario == db_access["user"] or obtener_password == db_access["password"]:
             #En caso de tener ya un elemento "info_login" (etiqueta creado) lo borra
             if hasattr(self, "info_login"):
                 self.info_login.destroy()
@@ -71,3 +73,36 @@ class Login:
                 #Crea esta etiqueta siempre que el login sea correcto
                 self.info_login = ctk.CTkLabel(self.root, text=f"Hola, {obtener_usuario}. Espere unos instantes..")
                 self.info_login.pack()
+
+                #Se destruye la ventana login
+                self.root.destroy()
+                #para que no termine el programa
+                #se instancia la ventana de opciones del programa
+                ventana_opciones = VentanaOpciones()
+class VentanaOpciones:
+    #Lista de texto para los botones
+    botones = ['Consulta SQL', 'Mostrar Bases de Datos', 'Eliminar Bases de Datos','Crear Bases de Datos',
+               'Crear Respaldos', 'Crear Tablas', 'Elimiar Tablas', 'Mostrar Tablas','Mostrar Columnas',
+                'Insertar Registros','Eliminar Registros','Vaciar Tablas','Actualizar Registros']
+    def __init__(self):
+        self.root =ctk.CTk()
+        self.root.title("Opciones para trabajar con bases de datos.")
+
+        #Contador para la posicion de los botones
+        contador = 0
+        #Elementos por fila
+        elementos_fila = 3
+
+        #Crea los botones y establece su texto
+        for texto_boton in self.botones:
+            button = ctk.CTkButton(
+                master=self.root,
+                text=texto_boton,
+                height=25,
+                width=200
+            ) 
+            button.grid(row=contador//elementos_fila, column=contador%elementos_fila, padx=5, pady=5)
+
+            #incrementa el contador
+            contador +=1
+        self.root.mainloop()
