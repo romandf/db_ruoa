@@ -64,6 +64,7 @@ class DataBase:
                     self.conector.close()
                     print("Se cerro la conexion en el servidor..")
                     self.conexion_cerrada = True
+            return self.result
         return interno
     
     #metodo para cualesquiera consultas desde la base de datos
@@ -86,7 +87,7 @@ class DataBase:
         try:
             self.cursor.execute(sql)
             print("Salida de la instruccion introducida..")
-            print(self.cursor.fetchall())
+            self.result = self.cursor.fetchall()
         except:
             print("Ocurrio un error. revisa la instruccion SQL.")
 
