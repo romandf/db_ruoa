@@ -52,9 +52,11 @@ class DataBase:
                     print("Se abrio la conexion con el servidor..")
                 #se llama a la funcion externa
                 funcion_parametro(self, *args, **kwargs)
-            except:
+            except Exception as e:
                 #Se informa de un error en la llamada
-                print("Ocurrio un error con la llamada")
+                print(f"Ocurrio un error: {e}")
+                #Propagacion de la excepcion para poderla usar desde la interfaz grafica
+                raise e
             finally:
                 if self.conexion_cerrada:
                     pass
@@ -84,27 +86,15 @@ class DataBase:
     #hace cualquier tipo de consult sql
     @close_connect
     def consult(self, sql):
-        try:
-            self.cursor.execute(sql)
-            print("Salida de la instruccion introducida..")
-            self.result = self.cursor.fetchall()
-        except:
-            print("Ocurrio un error. revisa la instruccion SQL.")
+        self.cursor.execute(sql)
+        self.result = self.cursor.fetchall()
 
     #metodo para mostrar las bases de datos
     @close_connect
     def show_db(self):
-        try:
-            #Se informa de que se estan obteniendo las bases de datos
-            print("\nListado de las bases de datos alojadas en el servidor:\n")
             #Realiza la consulta para mostrar las bases de datos
             self.cursor.execute("SHOW DATABASES")
-            result = self.cursor.fetchall()
-            for db in result:
-                print(f"--{db[0]}")
-        except:
-            #Si ocurre una excepcion, se avisa en la consola
-            print("No se pudieron obtener las bases de datos. COmprueba la conexion con el servidor..")
+            self.result = self.cursor.fetchall()
     #metodo para borrar las bases de datos
     @close_connect #Cuando se usan varios decoradores el primero que se llama es el ultimo en ejecutarse
     @reporte_db #uso de la funcion decoradora
